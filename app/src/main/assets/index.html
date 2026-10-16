@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Kana Touch Typing</title>
+        <style>
+                    body {
+                        /* Force explicit Japanese fonts for Android WebView */
+                        font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', 'Yu Gothic', sans-serif;
+                        background-color: #f4f4f9;
+                        color: #333;
+                        text-align: center;
+                        margin: 0;
+                        padding: 15px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        min-height: 100vh;
+                        overscroll-behavior-y: contain;
+                    }
+                    h1 {
+                        color: #2c3e50;
+                        margin-bottom: 5px;
+                        font-size: 1.5em;
+                    }
+                    .header-link {
+                        font-size: 0.9em;
+                        margin-bottom: 15px;
+                    }
+                    .header-link a {
+                        color: #3498db;
+                        text-decoration: none;
+                    }
+                    .game-container {
+                        background: white;
+                        padding: 20px;
+                        border-radius: 12px;
+                        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                        max-width: 500px;
+                        width: 100%;
+                    }
+                    .status {
+                        font-size: 1.2em;
+                        font-weight: bold;
+                        color: #27ae60;
+                        height: 30px;
+                        margin-bottom: 5px;
+                        opacity: 0;
+                        transition: opacity 0.2s ease-in-out;
+                    }
+                    .show-status {
+                        opacity: 1;
+                    }
+
+                    /* CSS Grid guarantees all 3 boxes display side-by-side without wrapping */
+                    .characters-display {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr 1fr;
+                        gap: 8px;
+                        margin: 15px 0;
+                        width: 100%;
+                    }
+                    .char-box {
+                        background: #fdf2e9;
+                        border-radius: 12px;
+                        padding: 15px 5px;
+                        border: 2px dashed #e74c3c;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                    .char-label {
+                        font-size: 0.7em;
+                        color: #7f8c8d;
+                        margin-bottom: 10px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    .target-char {
+                        font-size: 32px;
+                        color: #e74c3c;
+                        line-height: 1;
+                        font-weight: bold;
+                    }
+                    #targetRomaji {
+                        font-size: 22px;
+                    }
+
+                    .instruction-text {
+                        font-size: 1em;
+                        color: #2c3e50;
+                        font-weight: bold;
+                        margin: 15px 0 10px 0;
+                    }
+
+                    .typing-input {
+                        font-size: 20px;
+                        text-align: center;
+                        padding: 12px;
+                        border: 2px solid #bdc3c7;
+                        border-radius: 8px;
+                        width: 90%;
+                        box-sizing: border-box;
+                        outline: none;
+                        transition: border-color 0.3s;
+                    }
+                    .typing-input:focus {
+                        border-color: #3498db;
+                    }
+
+                    .stats {
+                        margin-top: 15px;
+                        font-size: 1.2em;
+                        font-weight: bold;
+                    }
+                </style>
+    </head>
+<body>
+
+    <div class="header-link">
+                Listen to my podcast here <a href="https://www.livinginthefuture.rocks/" target="_blank">Living in the future</a>
+            </div>
+
+        <div class="game-container" id="gameContainer">
+                    <h1>Kana Touch Typing</h1>
+
+                    <div id="statusMessage" class="status"> Perfect! </div>
+
+                <div class="characters-display">
+                                <div class="char-box">
+                                                    <div class="char-label">Hiragana</div>
+                                                <div id="targetHiragana" class="target-char"></div>
+                                            </div>
+
+                            <div class="char-box">
+                                                <div class="char-label">Katakana</div>
+                                                <div id="targetKatakana" class="target-char"></div>
+                                            </div>
+
+                                <div class="char-box">
+                                                    <div class="char-label">Romaji</div>
+                                                    <div id="targetRomaji" class="target-char"></div>
+                                                </div>
+                            </div>
+
+                    <div class="instruction-text">Please type the displayed Hiragana Character on your keyboard</div>
+
+                    <input type="text" id="typingInput" class="typing-input" placeholder="Tap here to start typing" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+
+                    <div class="stats">Completed: <span id="completedCount">0</span></div>
+                </div>
+
+        <script>
+                    // URL-Encoded string guarantees Android Studio cannot corrupt the Japanese text on copy-paste
+                    const safeEncodedKana = "%E3%81%AC:nu,%E3%81%B5:fu,%E3%81%82:a,%E3%81%86:u,%E3%81%88:e,%E3%81%8A:o,%E3%82%84:ya,%E3%82%86:yu,%E3%82%88:yo,%E3%82%8F:wa,%E3%81%BB:ho,%E3%81%B8:he,%E3%81%9F:ta,%E3%81%A6:te,%E3%81%84:i,%E3%81%99:su,%E3%81%8B:ka,%E3%82%93:n,%E3%81%AA:na,%E3%81%AB:ni,%E3%82%89:ra,%E3%81%9B:se,%E3%82%9B:dakuten,%E3%82%9C:handakuten,%E3%81%A1:chi,%E3%81%A8:to,%E3%81%97:shi,%E3%81%AF:ha,%E3%81%8D:ki,%E3%81%8F:ku,%E3%81%BE:ma,%E3%81%AE:no,%E3%82%8A:ri,%E3%82%8C:re,%E3%81%91:ke,%E3%82%80:mu,%E3%81%A4:tsu,%E3%81%95:sa,%E3%81%9D:so,%E3%81%B2:hi,%E3%81%93:ko,%E3%81%BF:mi,%E3%82%82:mo,%E3%81%AD:ne,%E3%82%8B:ru,%E3%82%81:me,%E3%82%8D:ro";
+
+                    // Decode and build the strict array internally
+                    const kanaData = decodeURIComponent(safeEncodedKana).split(',').map(pair => {
+                        const parts = pair.split(':');
+                        const h = parts[0];
+                        const r = parts[1];
+
+                        // Mathematically shift Hiragana to Katakana
+                        let k = h;
+                        if (h !== '' && h !== '') {
+                            k = String.fromCharCode(h.charCodeAt(0) + 0x60);
+                        }
+                        return { h: h, k: k, r: r };
+                    });
+
+                    let isPlaying = false;
+                    let currentTarget = null;
+                    let score = 0;
+
+                    const targetHiraganaEl = document.getElementById('targetHiragana');
+                    const targetKatakanaEl = document.getElementById('targetKatakana');
+                    const targetRomajiEl = document.getElementById('targetRomaji');
+                    const statusEl = document.getElementById('statusMessage');
+                    const countEl = document.getElementById('completedCount');
+                    const typingInput = document.getElementById('typingInput');
+
+                    function speakCharacter(char) {
+                        if (!char || char === '' || char === '') return;
+
+                        if (window.AndroidApp && window.AndroidApp.speak) {
+                            window.AndroidApp.speak(char);
+                        } else if ('speechSynthesis' in window) {
+                            window.speechSynthesis.cancel();
+                            const utterance = new SpeechSynthesisUtterance(char);
+                            utterance.lang = 'ja-JP';
+                            window.speechSynthesis.speak(utterance);
+                        }
+                    }
+
+                    function startGame() {
+                        if (isPlaying) return;
+                        isPlaying = true;
+                        typingInput.placeholder = "Type the character...";
+                        score = 0;
+                        countEl.innerText = score;
+                        nextTurn();
+                    }
+
+                    function nextTurn() {
+                        const randomIndex = Math.floor(Math.random() * kanaData.length);
+                        currentTarget = kanaData[randomIndex];
+
+                        // Set displays
+                        targetHiraganaEl.innerText = currentTarget.h;
+                        targetKatakanaEl.innerText = currentTarget.k;
+                        targetRomajiEl.innerText = currentTarget.r;
+
+                        speakCharacter(currentTarget.h);
+                        typingInput.value = '';
+                    }
+
+                    function showSuccessMessage() {
+                        statusEl.classList.add('show-status');
+                        statusEl.innerText = ' Perfect! ';
+                        setTimeout(() => {
+                            statusEl.classList.remove('show-status');
+                        }, 500);
+                    }
+
+                    typingInput.addEventListener('input', () => {
+                        if (!isPlaying) {
+                            startGame();
+                            typingInput.value = '';
+                            return;
+                        }
+
+                        const typedText = typingInput.value.trim().toLowerCase();
+                        if (!typedText || !currentTarget) return;
+
+                        // Validate: Match Hiragana, Katakana, or ends with exact Romaji string
+                        if (typedText.includes(currentTarget.h) || typedText.includes(currentTarget.k) || typedText.endsWith(currentTarget.r)) {
+                            score++;
+                            countEl.innerText = score;
+                            showSuccessMessage();
+                            nextTurn();
+                        }
+                    });
+
+                    typingInput.addEventListener('focus', () => {
+                        if (!isPlaying) startGame();
+                    });
+
+                    window.addEventListener('keydown', (e) => {
+                        if (!isPlaying && (e.code === 'Space' || e.key === 'Enter')) {
+                            e.preventDefault();
+                            typingInput.focus();
+                            startGame();
+                            return;
+                        }
+                    });
+                </script>
+    </body>
+</html>
