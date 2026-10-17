@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Hirigana Touch Typing Tutor"
+rootProject.name = "Hiragana Touch Typing Tutor"
 include(":app")

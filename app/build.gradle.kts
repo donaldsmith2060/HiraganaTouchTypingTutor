@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    namespace = "rocks.livinginthefuture.hiriganatouchtypingtutor"
+    namespace = "rocks.livinginthefuture.hiraganatouchtypingtutor"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
-        applicationId = "rocks.livinginthefuture.hiriganatouchtypingtutor"
+        applicationId = "rocks.livinginthefuture.hiraganatouchtypingtutor"
         minSdk = 24
         targetSdk = 37
         versionCode = 1
