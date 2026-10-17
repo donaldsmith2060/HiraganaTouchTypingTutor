@@ -1,0 +1,8 @@
+Hiragana Touch Typing Tutor is an interactive app designed to help you master Japanese Kana touch typing on Android.
+
+Features:
+- Practice Hiragana, Katakana, and Romaji characters side-by-side.
+- Real-time native Text-to-Speech (TTS) audio pronunciation for Japanese characters.
+- Works with both touch screen software keyboards and physical hardware keyboards.
+- Track completed characters and build typing speed and accuracy.
+- Lightweight and privacy-friendly with no ads or tracking.
